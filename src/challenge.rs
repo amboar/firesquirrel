@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Copyright 2019 Andrew Jeffery */
 use crate::theory::{Note, NoteError, derive_note, normalise_note};
-use crate::guitar::{derive_fret, derive_string, normalise_fret};
+use crate::guitar::Guitar;
 
 use rand::{Rng, thread_rng};
 use rand::seq::SliceRandom;
@@ -28,17 +28,8 @@ fn choose_note() -> Note {
     *notes.choose(&mut thread_rng()).unwrap()
 }
 
-fn choose_string() -> Note {
-    let notes: Vec<Note> = vec![
-            Note::E,
-            Note::A,
-            Note::D,
-            Note::G,
-            Note::B,
-            Note::E,
-    ];
-
-    *notes.choose(&mut thread_rng()).unwrap()
+fn choose_string(guitar: &Guitar) -> Note {
+    *guitar.strings().choose(&mut thread_rng()).unwrap()
 }
 
 fn choose_fret() -> i32 {
@@ -143,40 +134,41 @@ impl From<ParseIntError> for ChallengeError {
 }
 
 impl Challenge {
-    pub fn fret() -> Result<Challenge, ChallengeError> {
-        let cs = choose_string();
+    pub fn fret(guitar: Guitar) -> Result<Challenge, ChallengeError> {
+        let cs = choose_string(&guitar);
         let cn = choose_note();
 
         Ok(Challenge {
-            question: format!("With EADGBE tuning, which fret is {:?} on {:?}?", cn, cs),
-            answer: ChallengeType::Fret(derive_fret(cs, cn)),
+            question: format!("With {:?} tuning, which fret is {:?} on {:?}?", guitar.tuning, cn, cs),
+            answer: ChallengeType::Fret(Guitar::derive_fret(cs, cn)),
         })
     }
 
-    pub fn note() -> Result<Challenge, ChallengeError> {
-        let cs = choose_string();
+    pub fn note(guitar: Guitar) -> Result<Challenge, ChallengeError> {
+        let cs = choose_string(&guitar);
         let cf = choose_fret();
 
         Ok(Challenge {
-            question: format!("With EADGBE tuning, what note is fret {:?} on {:?}?", cf, cs),
+            question: format!("With {:?} tuning, what note is fret {:?} on {:?}?", guitar.tuning, cf, cs),
             answer: ChallengeType::Note(derive_note(cs, cf)?),
         })
     }
 
-    pub fn string() -> Result<Challenge, ChallengeError> {
-        let cs = choose_string();
+    pub fn string(guitar: Guitar) -> Result<Challenge, ChallengeError> {
+        let cs = choose_string(&guitar);
 
         Ok(Challenge {
-            question: format!("With EADGBE tuning, what string is {:?}?", cs),
-            answer: ChallengeType::String(derive_string(cs)),
+            question: format!("With {:?} tuning, what string is {:?}?", guitar.tuning, cs),
+            answer: ChallengeType::String(guitar.derive_string(cs)),
         })
     }
 
-    pub fn tuning() -> Result<Challenge, ChallengeError> {
-        let cs = choose_string();
+    pub fn tuning(guitar: Guitar) -> Result<Challenge, ChallengeError> {
+        let cs = choose_string(&guitar);
 
         Ok(Challenge {
-            question: format!("With EADGBE tuning, what is the note of open string {}?", derive_string(cs)),
+            question: format!("With {:?} tuning, what is the note of open string {}?", guitar.tuning,
+                              guitar.derive_string(cs)),
             answer: ChallengeType::Tuning(cs),
         })
     }
@@ -189,7 +181,7 @@ impl Challenge {
         match self.answer {
             ChallengeType::Fret(answer) => {
                 let guess = guess.parse::<i32>()?;
-                Ok(normalise_fret(guess) == answer)
+                Ok(Guitar::normalise_fret(guess) == answer)
             },
             ChallengeType::Note(answer) => {
                 let note: Note = normalise_note(guess)?;
