@@ -1,12 +1,25 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Copyright 2019 Andrew Jeffery */
-/*
+
+use std::vec::Vec;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Note { C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B }
+
+#[derive(Debug)]
+pub enum NoteError {
+    OffsetError,
+    NotationError,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum Interval {
     Identity,
     Half,
     Whole,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum Degree {
     Tonic,
     Supertonic,
@@ -17,6 +30,7 @@ pub enum Degree {
     Subtonic,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Mode {
     Ionian,
     Dorian,
@@ -27,18 +41,35 @@ pub enum Mode {
     Locrian
 }
 
-pub enum Scale { Major, Minor, }
-*/
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Note {
-    C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B
+#[derive(Debug, Clone, Copy)]
+pub enum ModeError {
+    UnrecognisedMode,
 }
 
-#[derive(Debug)]
-pub enum NoteError {
-    OffsetError,
-    NotationError,
+pub fn normalise_mode(mode: String) -> Result<Mode, ModeError> {
+    match mode.to_lowercase().as_ref() {
+        "ionian" => Ok(Mode::Ionian),
+        "dorian" => Ok(Mode::Dorian),
+        "phrygian" => Ok(Mode::Phrygian),
+        "lydian" => Ok(Mode::Lydian),
+        "mixolydian" => Ok(Mode::Mixolydian),
+        "aeolian" => Ok(Mode::Aeolian),
+        "locrian" => Ok(Mode::Locrian),
+        _ => Err(ModeError::UnrecognisedMode),
+    }
+}
+
+pub const DIATONIC: [Interval; 6] = [
+    Interval::Whole,
+    Interval::Whole,
+    Interval::Half,
+    Interval::Whole,
+    Interval::Whole,
+    Interval::Whole,
+];
+
+pub enum Class {
+    Heptatonic(&'static [Interval; 6], Mode),
 }
 
 pub fn derive_note(base: Note, offset: i32) -> Result<Note, NoteError> {
@@ -74,5 +105,37 @@ pub fn normalise_note(note: String) -> Result<Note, NoteError> {
         "a#" | "bb" => Ok(Note::Bb),
         "b"         => Ok(Note::B),
         _ => Err(NoteError::NotationError),
+    }
+}
+
+pub struct Scale {
+    notes: Vec<Note>,
+}
+
+impl Scale {
+    pub fn new(class: Class, key: Note) -> Result<Scale, NoteError> {
+        let (intervals, mode) = match class {
+            Class::Heptatonic(intervals, mode) => {
+                (intervals, mode)
+            }
+        };
+
+        let mut note = key;
+        let mut scale = Scale {
+            notes: vec!(),
+        };
+        scale.notes.push(key);
+        for i in intervals {
+            note = derive_note(note, *i as i32)?;
+            scale.notes.push(note);
+        }
+
+        scale.notes.rotate_left(mode as usize);
+
+        Ok(scale)
+    }
+
+    pub fn note(&self, degree: Degree) -> Note {
+        *self.notes.get(degree as usize).unwrap()
     }
 }
