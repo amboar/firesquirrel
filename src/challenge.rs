@@ -86,6 +86,7 @@ impl<'a> Renderer for IORenderer<'a> {
 
     fn hint(&mut self, hint: String) -> Result<(), RendererError> {
         self.dout.write_all(hint.as_bytes())?;
+        self.dout.write(b"\n")?;
         Ok(())
     }
 
