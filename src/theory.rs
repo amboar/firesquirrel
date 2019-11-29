@@ -12,11 +12,24 @@ pub enum NoteError {
     NotationError,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Interval {
     Identity,
     Half,
     Whole,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum IntervalError {
+    UnrecognisedInterval,
+}
+
+pub fn normalise_interval(interval: String) -> Result<Interval, IntervalError> {
+    match interval.to_lowercase().as_ref() {
+        "half" | "semitone" => Ok(Interval::Half),
+        "whole" | "tone" => Ok(Interval::Whole),
+        _ => Err(IntervalError::UnrecognisedInterval),
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

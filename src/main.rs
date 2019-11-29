@@ -40,9 +40,13 @@ fn ask_scales(_: Guitar) -> Result<(), ChallengeError> {
     ask_stdio(Challenge::scale()?)
 }
 
+fn ask_intervals(_: Guitar) -> Result<(), ChallengeError> {
+    ask_stdio(Challenge::interval()?)
+}
+
 fn ask_whatever(guitar: Guitar) -> Result<(), ChallengeError> {
     let quizzes: Vec<& dyn Fn(Guitar) -> Result<(), ChallengeError>> =
-        vec![&ask_frets, &ask_notes, &ask_strings, &ask_tunings, &ask_modes, &ask_scales];
+        vec![&ask_frets, &ask_notes, &ask_strings, &ask_tunings, &ask_modes, &ask_scales, &ask_intervals];
     let mut rng = thread_rng();
     quizzes.choose(&mut rng).unwrap()(guitar)
 }
@@ -69,6 +73,7 @@ fn main() -> Result<(), ChallengeError> {
                 "tunings" => &ask_tunings,
                 "modes" => &ask_modes,
                 "scales" => &ask_scales,
+                "intervals" => &ask_intervals,
                 mode => {
                     println!("Unrecognised mode: {}", mode);
                     panic!();

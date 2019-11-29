@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Copyright 2019 Andrew Jeffery */
-use crate::theory::{Class, Degree, DIATONIC, Note, NoteError, Mode, ModeError, Scale, derive_note, normalise_note, normalise_mode};
+use crate::theory::{Class, Degree, DIATONIC, Interval, IntervalError, Note, NoteError, Mode, ModeError, Scale, derive_note, normalise_interval, normalise_note, normalise_mode};
 use crate::guitar::Guitar;
 
 use rand::{Rng, thread_rng};
@@ -62,6 +62,10 @@ fn choose_degree() -> Degree {
     ];
 
     *degrees.choose(&mut thread_rng()).unwrap()
+}
+
+fn choose_index(slice: &[Interval]) -> usize {
+    thread_rng().gen_range(0, slice.len())
 }
 
 #[derive(Debug)]
@@ -132,6 +136,7 @@ pub enum ChallengeType {
     Tuning(Note),
     Mode(Mode),
     Scale(Note),
+    Interval(Interval),
 }
 
 pub struct Challenge {
@@ -145,6 +150,7 @@ pub enum ChallengeError {
     NoteError(NoteError),
     InvalidGuess(ParseIntError),
     ModeError(ModeError),
+    IntervalError(IntervalError),
 }
 
 impl From<RendererError> for ChallengeError {
@@ -168,6 +174,12 @@ impl From<ParseIntError> for ChallengeError {
 impl From<ModeError> for ChallengeError {
     fn from(error: ModeError) -> Self {
         ChallengeError::ModeError(error)
+    }
+}
+
+impl From<IntervalError> for ChallengeError {
+    fn from(error: IntervalError) -> Self {
+        ChallengeError::IntervalError(error)
     }
 }
 
@@ -237,6 +249,16 @@ impl Challenge {
         })
     }
 
+    pub fn interval() -> Result<Challenge, ChallengeError> {
+        let class = &DIATONIC;
+        let index = choose_index(class);
+
+        Ok(Challenge {
+            question: format!("In the diatonic scale, what is the width of interval {}?", index + 1),
+            answer: ChallengeType::Interval(class[index]),
+        })
+    }
+
     pub fn issue(&self, renderer: &mut dyn Renderer) -> Result<(), ChallengeError> {
         Ok(renderer.challenge(&self.question)?)
     }
@@ -267,6 +289,10 @@ impl Challenge {
                 let note: Note = normalise_note(guess)?;
                 Ok(note == answer)
             }
+            ChallengeType::Interval(answer) => {
+                let interval: Interval = normalise_interval(guess)?;
+                Ok(interval == answer)
+            }
         }
     }
 
@@ -290,7 +316,8 @@ pub fn issue(challenge: Challenge, renderer: &mut dyn Renderer) -> Result<(), Ch
                         ChallengeError::RendererError(_) => return Err(err),
                         ChallengeError::NoteError(_)
                             | ChallengeError::InvalidGuess(_)
-                            | ChallengeError::ModeError(_) => false,
+                            | ChallengeError::ModeError(_)
+                            | ChallengeError::IntervalError(_) => false,
                     }
                 };
                 renderer.mark(result)?;
