@@ -50,6 +50,20 @@ fn choose_mode() -> Mode {
     *modes.choose(&mut thread_rng()).unwrap()
 }
 
+fn choose_degree() -> Degree {
+    let degrees = vec![
+        Degree::Tonic,
+        Degree::Supertonic,
+        Degree::Mediant,
+        Degree::Subdominant,
+        Degree::Dominant,
+        Degree::Submediant,
+        Degree::Subtonic,
+    ];
+
+    *degrees.choose(&mut thread_rng()).unwrap()
+}
+
 #[derive(Debug)]
 pub enum RendererError {
     IoError(io::Error),
@@ -117,6 +131,7 @@ pub enum ChallengeType {
     String(i32),
     Tuning(Note),
     Mode(Mode),
+    Scale(Note),
 }
 
 pub struct Challenge {
@@ -209,6 +224,19 @@ impl Challenge {
         })
     }
 
+    pub fn scale() -> Result<Challenge, ChallengeError> {
+        let key = Note::C;
+        let mode = Mode::Ionian;
+        let scale = Scale::new(Class::Heptatonic(&DIATONIC, mode), key)?;
+        let degree = choose_degree();
+
+        Ok(Challenge {
+            question: format!("In the key of {:?} major, what is the {:?} note?",
+                              key, degree),
+            answer: ChallengeType::Scale(scale.note(degree)),
+        })
+    }
+
     pub fn issue(&self, renderer: &mut dyn Renderer) -> Result<(), ChallengeError> {
         Ok(renderer.challenge(&self.question)?)
     }
@@ -234,6 +262,10 @@ impl Challenge {
             ChallengeType::Mode(answer) => {
                 let mode: Mode = normalise_mode(guess)?;
                 Ok(mode == answer)
+            }
+            ChallengeType::Scale(answer) => {
+                let note: Note = normalise_note(guess)?;
+                Ok(note == answer)
             }
         }
     }
