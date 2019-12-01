@@ -13,6 +13,26 @@ pub enum NoteError {
     NotationError,
 }
 
+impl Note {
+    pub fn derive(&self, offset: i32) -> Result<Note, NoteError> {
+        match ((*self as i32) + offset) % 12 {
+            0 => Ok(Note::C),
+            1 => Ok(Note::Db),
+            2 => Ok(Note::D),
+            3 => Ok(Note::Eb),
+            4 => Ok(Note::E),
+            5 => Ok(Note::F),
+            6 => Ok(Note::Gb),
+            7 => Ok(Note::G),
+            8 => Ok(Note::Ab),
+            9 => Ok(Note::A),
+            10 => Ok(Note::Bb),
+            11 => Ok(Note::B),
+            _ => Err(NoteError::OffsetError),
+        }
+    }
+}
+
 impl FromStr for Note {
     type Err = NoteError;
 
@@ -116,24 +136,6 @@ pub enum Class {
     Heptatonic(&'static [Interval; 6], Mode),
 }
 
-pub fn derive_note(base: Note, offset: i32) -> Result<Note, NoteError> {
-    match ((base as i32) + offset) % 12 {
-        0 => Ok(Note::C),
-        1 => Ok(Note::Db),
-        2 => Ok(Note::D),
-        3 => Ok(Note::Eb),
-        4 => Ok(Note::E),
-        5 => Ok(Note::F),
-        6 => Ok(Note::Gb),
-        7 => Ok(Note::G),
-        8 => Ok(Note::Ab),
-        9 => Ok(Note::A),
-        10 => Ok(Note::Bb),
-        11 => Ok(Note::B),
-        _ => Err(NoteError::OffsetError),
-    }
-}
-
 pub struct Scale {
     notes: Vec<Note>,
 }
@@ -152,7 +154,7 @@ impl Scale {
         };
         scale.notes.push(key);
         for i in intervals {
-            note = derive_note(note, *i as i32)?;
+            note = note.derive(*i as i32)?;
             scale.notes.push(note);
         }
 

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Copyright 2019 Andrew Jeffery */
-use crate::theory::{Class, Degree, DIATONIC, Interval, IntervalError, Note, NoteError, Mode, ModeError, Scale, derive_note};
+use crate::theory::{Class, Degree, DIATONIC, Interval, IntervalError, Note, NoteError, Mode, ModeError, Scale};
 use crate::guitar::Guitar;
 
 use rand::{Rng, thread_rng};
@@ -200,7 +200,7 @@ impl Challenge {
 
         Ok(Challenge {
             question: format!("With {:?} tuning, what note is fret {:?} on {:?}?", guitar.tuning, cf, cs),
-            answer: ChallengeType::Note(derive_note(cs, cf)?),
+            answer: ChallengeType::Note(cs.derive(cf)?),
         })
     }
 
