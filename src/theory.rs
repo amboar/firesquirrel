@@ -2,6 +2,7 @@
 /* Copyright 2019 Andrew Jeffery */
 
 use std::vec::Vec;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Note { C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B }
@@ -10,6 +11,28 @@ pub enum Note { C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B }
 pub enum NoteError {
     OffsetError,
     NotationError,
+}
+
+impl FromStr for Note {
+    type Err = NoteError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.to_lowercase().as_ref() {
+            "c"         => Ok(Note::C),
+            "c#" | "db" => Ok(Note::Db),
+            "d"         => Ok(Note::D),
+            "d#" | "eb" => Ok(Note::Eb),
+            "e"         => Ok(Note::E),
+            "f"         => Ok(Note::F),
+            "f#" | "gb" => Ok(Note::Gb),
+            "g"         => Ok(Note::G),
+            "g#" | "ab" => Ok(Note::Ab),
+            "a"         => Ok(Note::A),
+            "a#" | "bb" => Ok(Note::Bb),
+            "b"         => Ok(Note::B),
+            _ => Err(NoteError::NotationError),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -24,11 +47,15 @@ pub enum IntervalError {
     UnrecognisedInterval,
 }
 
-pub fn normalise_interval(interval: String) -> Result<Interval, IntervalError> {
-    match interval.to_lowercase().as_ref() {
-        "half" | "semitone" => Ok(Interval::Half),
-        "whole" | "tone" => Ok(Interval::Whole),
-        _ => Err(IntervalError::UnrecognisedInterval),
+impl FromStr for Interval {
+    type Err = IntervalError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.to_lowercase().as_ref() {
+            "half" | "semitone" => Ok(Interval::Half),
+            "whole" | "tone" => Ok(Interval::Whole),
+            _ => Err(IntervalError::UnrecognisedInterval),
+        }
     }
 }
 
@@ -59,16 +86,20 @@ pub enum ModeError {
     UnrecognisedMode,
 }
 
-pub fn normalise_mode(mode: String) -> Result<Mode, ModeError> {
-    match mode.to_lowercase().as_ref() {
-        "ionian" => Ok(Mode::Ionian),
-        "dorian" => Ok(Mode::Dorian),
-        "phrygian" => Ok(Mode::Phrygian),
-        "lydian" => Ok(Mode::Lydian),
-        "mixolydian" => Ok(Mode::Mixolydian),
-        "aeolian" => Ok(Mode::Aeolian),
-        "locrian" => Ok(Mode::Locrian),
-        _ => Err(ModeError::UnrecognisedMode),
+impl FromStr for Mode {
+    type Err = ModeError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.to_lowercase().as_ref() {
+            "ionian" => Ok(Mode::Ionian),
+            "dorian" => Ok(Mode::Dorian),
+            "phrygian" => Ok(Mode::Phrygian),
+            "lydian" => Ok(Mode::Lydian),
+            "mixolydian" => Ok(Mode::Mixolydian),
+            "aeolian" => Ok(Mode::Aeolian),
+            "locrian" => Ok(Mode::Locrian),
+            _ => Err(ModeError::UnrecognisedMode),
+        }
     }
 }
 
@@ -100,24 +131,6 @@ pub fn derive_note(base: Note, offset: i32) -> Result<Note, NoteError> {
         10 => Ok(Note::Bb),
         11 => Ok(Note::B),
         _ => Err(NoteError::OffsetError),
-    }
-}
-
-pub fn normalise_note(note: String) -> Result<Note, NoteError> {
-    match note.to_lowercase().as_ref() {
-        "c"         => Ok(Note::C),
-        "c#" | "db" => Ok(Note::Db),
-        "d"         => Ok(Note::D),
-        "d#" | "eb" => Ok(Note::Eb),
-        "e"         => Ok(Note::E),
-        "f"         => Ok(Note::F),
-        "f#" | "gb" => Ok(Note::Gb),
-        "g"         => Ok(Note::G),
-        "g#" | "ab" => Ok(Note::Ab),
-        "a"         => Ok(Note::A),
-        "a#" | "bb" => Ok(Note::Bb),
-        "b"         => Ok(Note::B),
-        _ => Err(NoteError::NotationError),
     }
 }
 

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Copyright 2019 Andrew Jeffery */
-use crate::theory::{Class, Degree, DIATONIC, Interval, IntervalError, Note, NoteError, Mode, ModeError, Scale, derive_note, normalise_interval, normalise_note, normalise_mode};
+use crate::theory::{Class, Degree, DIATONIC, Interval, IntervalError, Note, NoteError, Mode, ModeError, Scale, derive_note};
 use crate::guitar::Guitar;
 
 use rand::{Rng, thread_rng};
@@ -270,7 +270,7 @@ impl Challenge {
                 Ok(Guitar::normalise_fret(guess) == answer)
             },
             ChallengeType::Note(answer) => {
-                let note: Note = normalise_note(guess)?;
+                let note = guess.parse::<Note>()?;
                 Ok(note == answer)
             }
             ChallengeType::String(answer) => {
@@ -278,19 +278,19 @@ impl Challenge {
                 Ok(guess == answer)
             }
             ChallengeType::Tuning(answer) => {
-                let note: Note = normalise_note(guess)?;
+                let note = guess.parse::<Note>()?;
                 Ok(note == answer)
             }
             ChallengeType::Mode(answer) => {
-                let mode: Mode = normalise_mode(guess)?;
+                let mode = guess.parse::<Mode>()?;
                 Ok(mode == answer)
             }
             ChallengeType::Scale(answer) => {
-                let note: Note = normalise_note(guess)?;
+                let note = guess.parse::<Note>()?;
                 Ok(note == answer)
             }
             ChallengeType::Interval(answer) => {
-                let interval: Interval = normalise_interval(guess)?;
+                let interval = guess.parse::<Interval>()?;
                 Ok(interval == answer)
             }
         }
